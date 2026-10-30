@@ -1,0 +1,5 @@
+﻿# build artifacts
+build/
+Payload/
+*.ipa
+.DS_Store
