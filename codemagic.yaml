@@ -1,0 +1,35 @@
+workflows:
+  build-ipa:
+    name: SteamQRApprover unsigned IPA
+    instance_type: mac_mini_m2
+    max_build_duration: 30
+    triggering:
+      events:
+        - push
+    scripts:
+      - name: Install XcodeGen
+        script: brew install xcodegen
+      - name: Generate Xcode project
+        script: xcodegen generate
+      - name: Build (unsigned)
+        script: |
+          set -eo pipefail
+          xcodebuild \
+            -project SteamQRApprover.xcodeproj \
+            -scheme SteamQRApprover \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            clean build
+      - name: Package .ipa
+        script: |
+          set -e
+          APP=$(find build/Build/Products/Release-iphoneos -maxdepth 1 -name "*.app" | head -1)
+          mkdir -p Payload
+          cp -R "$APP" Payload/
+          zip -qr SteamQRApprover.ipa Payload
+    artifacts:
+      - SteamQRApprover.ipa
